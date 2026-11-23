@@ -26,6 +26,33 @@ DEFAULT_SESSIONS = [
 ]
 
 
+class PricingStrategy:
+    def base_price(self) -> float:
+        raise NotImplementedError
+
+
+class StandardPricingStrategy(PricingStrategy):
+    def base_price(self) -> float:
+        return BASE_PRICE
+
+
+class StudentPricingStrategy(PricingStrategy):
+    def base_price(self) -> float:
+        return BASE_PRICE - BASE_PRICE * STUDENT_DISCOUNT
+
+
+class ChildPricingStrategy(PricingStrategy):
+    def base_price(self) -> float:
+        return BASE_PRICE - BASE_PRICE * CHILD_DISCOUNT
+
+
+PRICING_STRATEGIES = {
+    "standard": StandardPricingStrategy(),
+    "student": StudentPricingStrategy(),
+    "child": ChildPricingStrategy(),
+}
+
+
 class BookingSystem:
     def __init__(self, data_file=None):
         self.data_file = data_file
@@ -83,28 +110,16 @@ class BookingSystem:
     # Pricing
     # ------------------------------------------------------------------ #
     def calculate_price(self, ticket_type, quantity, show_time):
-        hour = int(show_time.split(" ")[1].split(":")[0])
-        if ticket_type == "standard":
-            price = BASE_PRICE
-            if hour >= EVENING_START_HOUR:
-                price = price + EVENING_SURCHARGE
-            total = price * quantity
-            total = round(total, 2)
-        elif ticket_type == "student":
-            price = BASE_PRICE - BASE_PRICE * STUDENT_DISCOUNT
-            if hour >= EVENING_START_HOUR:
-                price = price + EVENING_SURCHARGE
-            total = price * quantity
-            total = round(total, 2)
-        elif ticket_type == "child":
-            price = BASE_PRICE - BASE_PRICE * CHILD_DISCOUNT
-            if hour >= EVENING_START_HOUR:
-                price = price + EVENING_SURCHARGE
-            total = price * quantity
-            total = round(total, 2)
-        else:
+        strategy = PRICING_STRATEGIES.get(ticket_type)
+        if not strategy:
             raise ValueError(f"Unknown ticket type: {ticket_type}")
-        return total
+
+        price = strategy.base_price()
+        hour = int(show_time.split(" ")[1].split(":")[0])
+        if hour >= EVENING_START_HOUR:
+            price = price + EVENING_SURCHARGE
+
+        return round(price * quantity, 2)
 
     # ------------------------------------------------------------------ #
     # Booking / cancelling
@@ -195,4 +210,3 @@ class BookingSystem:
         else:
             raise ValueError(f"Unsupported format: {fmt}")
         return path
-
