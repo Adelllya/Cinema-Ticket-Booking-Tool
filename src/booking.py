@@ -21,6 +21,8 @@ DEFAULT_SESSIONS = [
      "hall": "Hall 2", "rows": 4, "seats_per_row": 6},
     {"id": "S4", "movie": "Dune: Part Two", "time": "2026-12-02 20:00",
      "hall": "Hall 3", "rows": 6, "seats_per_row": 10},
+    {"id": "S5", "movie": "The Hunger Games: Sunrise on the Reaping", "time": "2026-12-03 21:00",
+     "hall": "Hall 4", "rows": 7, "seats_per_row": 12},
 ]
 
 

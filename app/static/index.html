@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CineBook — Cinema Ticket Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0F0F23; --card: #1B1B30; --muted: #27273B; --muted-fg: #A3AEC2;
+    --fg: #F8FAFC; --primary: #1E1B4B; --secondary: #312E81; --border: #3730A3;
+    --accent: #EAB308; --accent-2: #CA8A04; --on-accent: #0F172A;
+    --danger: #EF4444; --ok: #22C55E; --radius: 16px;
+    --ease: cubic-bezier(.2,.8,.2,1);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #2a2470 0%, var(--bg) 55%) fixed;
+    color: var(--fg); line-height: 1.5; min-height: 100vh;
+  }
+  button, input { font: inherit; }
+  :focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 8px; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 20px 64px; }
+
+  /* Header */
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+          background: linear-gradient(135deg, var(--accent), #F97316); color: var(--on-accent);
+          box-shadow: 0 0 24px rgba(234,179,8,.35); }
+  .brand h1 { font-size: 22px; margin: 0; letter-spacing: -.02em; }
+  .brand p { margin: 0; color: var(--muted-fg); font-size: 13px; }
+  .links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; border: 1px solid var(--border);
+         background: rgba(255,255,255,.04); color: var(--fg); padding: 10px 14px; border-radius: 12px;
+         text-decoration: none; font-size: 14px; font-weight: 500; min-height: 44px;
+         transition: background .2s var(--ease), transform .15s var(--ease), border-color .2s; }
+  .btn:hover { background: rgba(255,255,255,.09); border-color: #6366F1; }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: var(--on-accent);
+                 border: none; font-weight: 700; box-shadow: 0 8px 24px rgba(234,179,8,.25); }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; filter: none; }
+  .btn.danger { border-color: rgba(239,68,68,.5); color: #FCA5A5; }
+  .btn.danger:hover { background: rgba(239,68,68,.12); }
+  .btn.sm { padding: 6px 10px; min-height: 36px; font-size: 13px; }
+  svg.i { width: 18px; height: 18px; flex: none; }
+
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted-fg); margin: 0 0 14px; font-weight: 600; }
+
+  /* Sessions */
+  .sessions { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .session { position: relative; text-align: left; cursor: pointer; border: 1px solid rgba(255,255,255,.08);
+             background: var(--card); border-radius: var(--radius); padding: 0; overflow: hidden; color: var(--fg);
+             transition: transform .25s var(--ease), border-color .25s, box-shadow .25s; }
+  .session:hover { transform: translateY(-4px); border-color: rgba(99,102,241,.6); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+  .session[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 16px 40px rgba(234,179,8,.15); }
+  .poster { aspect-ratio: 2 / 2.4; position: relative; display: flex; align-items: flex-end; padding: 14px;
+            background-size: cover; background-position: center top; transition: background-size .5s var(--ease); }
+  .poster::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 45%, rgba(27,27,48,.97)); }
+  .poster span { position: relative; z-index: 1; font-weight: 800; font-size: 18px; line-height: 1.2; letter-spacing: -.02em; text-shadow: 0 2px 12px rgba(0,0,0,.7); }
+  .session img.p { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top;
+                   transition: transform .6s var(--ease); }
+  .session:hover img.p { transform: scale(1.06); }
+  .sessions { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important; }
+  .tag { position: absolute; top: 12px; right: 12px; z-index: 1; font-size: 11px; font-weight: 700; padding: 4px 8px;
+         border-radius: 999px; background: rgba(0,0,0,.45); backdrop-filter: blur(6px); }
+  .tag.eve { color: var(--accent); }
+  .meta { padding: 12px 14px 16px; font-size: 13px; color: var(--muted-fg); }
+  .meta strong { color: var(--fg); font-weight: 600; }
+  .bar { height: 6px; border-radius: 999px; background: var(--muted); margin-top: 10px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--ok), var(--accent)); transition: width .6s var(--ease); }
+
+  /* Booking area */
+  .grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); padding: 20px; }
+  .hall { overflow-x: auto; }
+  .screen { margin: 4px auto 34px; width: 80%; height: 10px; border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+            background: linear-gradient(var(--accent), transparent); box-shadow: 0 -8px 40px rgba(234,179,8,.45);
+            position: relative; }
+  .screen::after { content: "SCREEN"; position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+                   font-size: 11px; letter-spacing: .4em; color: var(--muted-fg); }
+  .seats { display: grid; gap: 8px; justify-content: center; }
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row-label { width: 18px; text-align: center; color: var(--muted-fg); font-size: 12px; font-weight: 600; }
+  .aisle { width: 18px; }
+  .seat { width: 36px; height: 34px; border-radius: 9px 9px 6px 6px; border: 1px solid rgba(255,255,255,.12);
+          background: var(--muted); color: var(--muted-fg); font-size: 10px; font-weight: 600; cursor: pointer;
+          transition: background .18s var(--ease), transform .18s var(--ease), box-shadow .18s; }
+  .seat:hover:not([disabled]) { background: #3b3b5c; transform: translateY(-2px); color: var(--fg); }
+  .seat.sel { background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+              box-shadow: 0 0 16px rgba(234,179,8,.55); transform: translateY(-2px); }
+  .seat[disabled] { background: repeating-linear-gradient(45deg, #3a1d2a, #3a1d2a 4px, #2d1622 4px, #2d1622 8px);
+                    border-color: rgba(239,68,68,.35); color: transparent; cursor: not-allowed; }
+  .legend { display: flex; gap: 18px; justify-content: center; margin-top: 22px; font-size: 13px; color: var(--muted-fg); flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 16px; height: 14px; border-radius: 4px; display: inline-block; }
+  .empty { color: var(--muted-fg); text-align: center; padding: 48px 12px; }
+
+  /* Summary */
+  label { display: block; font-size: 13px; color: var(--muted-fg); margin: 0 0 6px; font-weight: 500; }
+  .field { margin-bottom: 16px; }
+  input[type=text] { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12);
+                     background: var(--bg); color: var(--fg); min-height: 44px; }
+  input[type=text]:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(234,179,8,.2); }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: var(--bg); border-radius: 12px; }
+  .seg button { border: 0; background: transparent; color: var(--muted-fg); padding: 10px 4px; border-radius: 9px;
+                cursor: pointer; font-size: 13px; font-weight: 600; min-height: 40px; transition: background .2s, color .2s; }
+  .seg button[aria-checked="true"] { background: var(--secondary); color: var(--fg); }
+  .seg small { display: block; font-weight: 500; font-size: 11px; opacity: .8; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; }
+  .chip { background: rgba(234,179,8,.15); color: var(--accent); border: 1px solid rgba(234,179,8,.35);
+          padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; animation: pop .25s var(--ease); }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } }
+  .total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed rgba(255,255,255,.15);
+           padding-top: 16px; margin: 18px 0 16px; }
+  .total b { font-size: 32px; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .hint { font-size: 12px; color: var(--muted-fg); margin-top: 6px; }
+
+  /* Bookings */
+  .bookings { margin-top: 32px; }
+  .bk-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .bk-head h2 { margin: 0; }
+  .tickets { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .ticket { display: grid; grid-template-columns: 1fr auto; background: var(--card); border-radius: var(--radius);
+            border: 1px solid rgba(255,255,255,.08); overflow: hidden; animation: pop .35s var(--ease); }
+  .ticket.cancelled { opacity: .5; }
+  .t-main { padding: 16px; }
+  .t-main h3 { margin: 0 0 4px; font-size: 16px; }
+  .t-main p { margin: 0; font-size: 13px; color: var(--muted-fg); }
+  .t-side { border-left: 2px dashed rgba(255,255,255,.12); padding: 16px; display: flex; flex-direction: column;
+            align-items: flex-end; justify-content: space-between; gap: 8px; min-width: 110px; }
+  .t-side b { font-size: 20px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+  .badge.confirmed { background: rgba(34,197,94,.15); color: #86EFAC; }
+  .badge.cancelled { background: rgba(239,68,68,.15); color: #FCA5A5; }
+  .t-actions { grid-column: 1 / -1; display: flex; gap: 6px; padding: 0 16px 14px; flex-wrap: wrap; }
+  .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--accent); }
+
+  /* Toast */
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 140%); background: #111827;
+           border: 1px solid var(--border); padding: 14px 18px; border-radius: 14px; display: flex; gap: 10px;
+           align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,.5); transition: transform .4s var(--ease); z-index: 20; }
+  .toast.show { transform: translate(-50%, 0); }
+  .toast.err svg { color: var(--danger); }
+  .toast svg { color: var(--ok); }
+
+  canvas#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg>
+      </div>
+      <div>
+        <h1>CineBook</h1>
+        <p>Cinema Ticket Booking Tool</p>
+      </div>
+    </div>
+    <nav class="links" aria-label="Developer links">
+      <a class="btn" href="/docs" target="_blank" rel="noopener">
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/></svg>
+        API docs
+      </a>
+    </nav>
+  </header>
+
+  <h2>1 · Choose a session</h2>
+  <div class="sessions" id="sessions" role="group" aria-label="Movie sessions"></div>
+
+  <div class="grid">
+    <section class="panel hall" aria-labelledby="hall-title">
+      <h2 id="hall-title">2 · Pick your seats</h2>
+      <div id="hall"><div class="empty">Select a session above to see the hall.</div></div>
+    </section>
+
+    <aside class="panel" aria-labelledby="sum-title">
+      <h2 id="sum-title">3 · Checkout</h2>
+      <div class="field">
+        <label for="name">Your name</label>
+        <input id="name" type="text" placeholder="e.g. Adelya" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label id="type-label">Ticket type</label>
+        <div class="seg" role="radiogroup" aria-labelledby="type-label" id="types">
+          <button role="radio" data-type="standard" aria-checked="true">Standard<small>$12</small></button>
+          <button role="radio" data-type="student" aria-checked="false">Student<small>−20%</small></button>
+          <button role="radio" data-type="child" aria-checked="false">Child<small>−50%</small></button>
+        </div>
+        <div class="hint" id="eve-hint"></div>
+      </div>
+      <div class="field">
+        <label>Selected seats</label>
+        <div class="chips" id="chips" aria-live="polite"><span class="hint">No seats selected yet</span></div>
+      </div>
+      <div class="total"><span>Total</span><b id="total">$0.00</b></div>
+      <button class="btn primary" id="book" style="width:100%; justify-content:center" disabled>
+        <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        Book tickets
+      </button>
+    </aside>
+  </div>
+
+  <section class="bookings" aria-labelledby="bk-title">
+    <div class="bk-head">
+      <h2 id="bk-title">Your tickets</h2>
+      <div class="links">
+        <a class="btn sm" href="/api/report?format=json">Report JSON</a>
+        <a class="btn sm" href="/api/report?format=csv">Report CSV</a>
+      </div>
+    </div>
+    <div class="tickets" id="tickets"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+  <span id="toast-text"></span>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const money = (n) => "$" + Number(n).toFixed(2);
+const state = { sessions: [], current: null, layout: null, selected: new Set(), type: "standard" };
+const POSTERS = {
+  "Interstellar": "/static/posters/interstellar.jpg",
+  "Spirited Away": "/static/posters/spirited-away.png",
+  "Dune: Part Two": "/static/posters/dune-part-two.jpeg",
+  "The Hunger Games: Sunrise on the Reaping": "/static/posters/hunger-games-sunrise.jpg",
+};
+const GRADIENTS = [
+  "linear-gradient(135deg,#1e3a8a,#7c3aed 60%,#f59e0b)",
+  "linear-gradient(135deg,#0f766e,#1d4ed8 70%)",
+  "linear-gradient(135deg,#be185d,#f97316)",
+  "linear-gradient(135deg,#78350f,#d97706 60%,#fde68a)",
+];
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || res.statusText);
+  return res.json();
+}
+
+function toast(msg, isErr = false) {
+  const t = $("#toast");
+  $("#toast-text").textContent = msg;
+  t.classList.toggle("err", isErr);
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 3200);
+}
+
+const isEvening = (time) => parseInt(time.split(" ")[1]) >= 18;
+
+async function loadSessions() {
+  state.sessions = await api("/api/sessions");
+  const box = $("#sessions");
+  box.innerHTML = "";
+  state.sessions.forEach((s, i) => {
+    const pct = Math.round(((s.total_seats - s.free_seats) / s.total_seats) * 100);
+    const [date, time] = s.time.split(" ");
+    const b = document.createElement("button");
+    b.className = "session";
+    b.setAttribute("aria-pressed", String(state.current === s.id));
+    b.innerHTML = `
+      <div class="poster" style="background:${GRADIENTS[i % GRADIENTS.length]}">
+        ${POSTERS[s.movie] ? `<img class="p" src="${POSTERS[s.movie]}" alt="${s.movie} poster" loading="lazy" />` : ""}
+        <span class="tag ${isEvening(s.time) ? "eve" : ""}">${isEvening(s.time) ? "Evening +$2" : "Matinee"}</span>
+        <span>${s.movie}</span>
+      </div>
+      <div class="meta">
+        <strong>${time}</strong> · ${date} · ${s.hall}<br/>
+        ${s.free_seats} of ${s.total_seats} seats free
+        <div class="bar" aria-hidden="true"><i style="width:${pct}%"></i></div>
+      </div>`;
+    b.onclick = () => selectSession(s.id);
+    box.appendChild(b);
+  });
+}
+
+async function selectSession(id) {
+  state.current = id;
+  state.selected.clear();
+  state.layout = await api(`/api/sessions/${id}/seats`);
+  document.querySelectorAll(".session").forEach((el, i) =>
+    el.setAttribute("aria-pressed", String(state.sessions[i].id === id)));
+  renderHall();
+  updateSummary();
+}
+
+function renderHall() {
+  const { rows, seats_per_row, booked } = state.layout;
+  const taken = new Set(booked);
+  const mid = Math.ceil(seats_per_row / 2);
+  let html = `<div class="screen" aria-hidden="true"></div><div class="seats">`;
+  for (let r = 0; r < rows; r++) {
+    const L = String.fromCharCode(65 + r);
+    html += `<div class="row"><span class="row-label">${L}</span>`;
+    for (let n = 1; n <= seats_per_row; n++) {
+      const id = L + n;
+      const isTaken = taken.has(id);
+      html += `<button class="seat ${state.selected.has(id) ? "sel" : ""}" data-seat="${id}"
+                 ${isTaken ? "disabled" : ""} aria-pressed="${state.selected.has(id)}"
+                 aria-label="Seat ${id}${isTaken ? ", taken" : ""}">${n}</button>`;
+      if (n === mid) html += `<span class="aisle"></span>`;
+    }
+    html += `<span class="row-label">${L}</span></div>`;
+  }
+  html += `</div><div class="legend">
+      <span><i style="background:var(--muted)"></i>Free</span>
+      <span><i style="background:var(--accent)"></i>Your pick</span>
+      <span><i style="background:#3a1d2a;border:1px solid rgba(239,68,68,.4)"></i>Taken</span></div>`;
+  $("#hall").innerHTML = html;
+  $("#hall").querySelectorAll(".seat:not([disabled])").forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.dataset.seat;
+      state.selected.has(id) ? state.selected.delete(id) : state.selected.add(id);
+      btn.classList.toggle("sel");
+      btn.setAttribute("aria-pressed", String(state.selected.has(id)));
+      updateSummary();
+    };
+  });
+}
+
+async function updateSummary() {
+  const seats = [...state.selected].sort();
+  $("#chips").innerHTML = seats.length
+    ? seats.map((s) => `<span class="chip">${s}</span>`).join("")
+    : `<span class="hint">No seats selected yet</span>`;
+  const sess = state.sessions.find((s) => s.id === state.current);
+  $("#eve-hint").textContent = sess && isEvening(sess.time) ? "Evening show: +$2.00 per ticket" : "";
+  if (sess && seats.length) {
+    const p = await api(`/api/price?session_id=${sess.id}&ticket_type=${state.type}&quantity=${seats.length}`);
+    $("#total").textContent = money(p.total);
+  } else {
+    $("#total").textContent = money(0);
+  }
+  $("#book").disabled = !seats.length;
+}
+
+document.querySelectorAll("#types button").forEach((b) => {
+  b.onclick = () => {
+    state.type = b.dataset.type;
+    document.querySelectorAll("#types button").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+    updateSummary();
+  };
+});
+
+$("#book").onclick = async () => {
+  const name = $("#name").value.trim();
+  if (!name) { $("#name").focus(); toast("Please enter your name first", true); return; }
+  try {
+    const bk = await api("/api/bookings", {
+      method: "POST",
+      body: JSON.stringify({ session_id: state.current, customer: name, ticket_type: state.type, seats: [...state.selected] }),
+    });
+    toast(`Booked! ${bk.seats.join(", ")} — ${money(bk.total)} (ID ${bk.id})`);
+    confetti();
+    await Promise.all([loadSessions(), selectSession(state.current), loadBookings()]);
+  } catch (e) { toast(e.message, true); }
+};
+
+async function loadBookings() {
+  const list = await api("/api/bookings");
+  const box = $("#tickets");
+  if (!list.length) { box.innerHTML = `<div class="empty panel">No tickets yet — book your first seats above.</div>`; return; }
+  box.innerHTML = list.map((b) => `
+    <article class="ticket ${b.status}">
+      <div class="t-main">
+        <h3>${b.movie}</h3>
+        <p>${b.time} · ${b.customer}</p>
+        <p>Seats <strong style="color:var(--fg)">${b.seats.join(" ") || "—"}</strong> · ${b.ticket_type} × ${b.quantity}</p>
+        <p class="code">#${b.id}</p>
+      </div>
+      <div class="t-side">
+        <span class="badge ${b.status}">${b.status}</span>
+        <b>${money(b.total)}</b>
+      </div>
+      <div class="t-actions">
+        <a class="btn sm" href="/api/bookings/${b.id}/receipt?format=json">Receipt JSON</a>
+        <a class="btn sm" href="/api/bookings/${b.id}/receipt?format=csv">Receipt CSV</a>
+        ${b.status === "confirmed" ? `<button class="btn sm danger" data-cancel="${b.id}">Cancel</button>` : ""}
+      </div>
+    </article>`).join("");
+  box.querySelectorAll("[data-cancel]").forEach((btn) => {
+    btn.onclick = async () => {
+      await api(`/api/bookings/${btn.dataset.cancel}`, { method: "DELETE" });
+      toast(`Booking ${btn.dataset.cancel} cancelled`);
+      await Promise.all([loadSessions(), loadBookings(), state.current && selectSession(state.current)]);
+    };
+  });
+}
+
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = $("#confetti"), ctx = c.getContext("2d");
+  c.width = innerWidth; c.height = innerHeight;
+  const colors = ["#EAB308", "#F97316", "#6366F1", "#22C55E", "#F8FAFC"];
+  const parts = Array.from({ length: 140 }, () => ({
+    x: innerWidth / 2, y: innerHeight * 0.6, vx: (Math.random() - 0.5) * 16, vy: -Math.random() * 16 - 6,
+    s: Math.random() * 6 + 4, c: colors[(Math.random() * colors.length) | 0], r: Math.random() * 6,
+  }));
+  let frame = 0;
+  (function tick() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    parts.forEach((p) => {
+      p.vy += 0.45; p.x += p.vx; p.y += p.vy; p.r += 0.1;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6); ctx.restore();
+    });
+    if (++frame < 120) requestAnimationFrame(tick); else ctx.clearRect(0, 0, c.width, c.height);
+  })();
+}
+
+(async () => {
+  await Promise.all([loadSessions(), loadBookings()]);
+  if (state.sessions.length) selectSession(state.sessions[1]?.id || state.sessions[0].id);
+})();
+</script>
+</body>
+</html>
+

@@ -6,7 +6,7 @@ from src.booking import BookingSystem
 def test_list_sessions_returns_default_sessions():
     system = BookingSystem()
     sessions = system.list_sessions()
-    assert len(sessions) == 4
+    assert len(sessions) == 5
     assert sessions[0]["movie"] == "Interstellar"
 
 

@@ -37,3 +37,13 @@ Sessions starting at 18:00 or later add an evening surcharge per ticket.
 python -m pytest -v
 ```
 
+## Web UI
+
+Start the interactive web application:
+
+```bash
+python3 -m uvicorn app.server:app --reload
+```
+
+Then open http://127.0.0.1:8000 in your browser (API docs at http://127.0.0.1:8000/docs).
+

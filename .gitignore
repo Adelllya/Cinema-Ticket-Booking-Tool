@@ -3,4 +3,6 @@ __pycache__/
 .venv/
 .pytest_cache/
 bookings.json
+report.csv
+report.json
 
